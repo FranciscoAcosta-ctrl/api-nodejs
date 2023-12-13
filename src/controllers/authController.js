@@ -1,21 +1,29 @@
 // src/controllers/authController.js
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import UserModel from '../models/userModel.js';
+
+const saltRounds = 10;
 
 const register = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Verificar si el usuario ya existe en la simulación de la base de datos
-    if (UserModel.findUserByUsername(username)) {
+    // Verificar si el usuario ya existe en la base de datos
+    const existingUser = await UserModel.findOne({ username });
+
+    if (existingUser) {
       return res.status(400).json({ error: 'El usuario ya existe' });
     }
 
-    // Crear un nuevo usuario en la simulación de la base de datos
-    const newUser = UserModel.createUser(username, password);
+    // Hash de la contraseña antes de guardarla en la base de datos
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Crear un nuevo usuario en la base de datos
+    const newUser = await UserModel.create({ username, password: hashedPassword });
 
     // Generar un token JWT
-    const token = jwt.sign({ user: { id: newUser.id, username: newUser.username } }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ user: { id: newUser._id, username: newUser.username } }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token });
   } catch (error) {
@@ -28,16 +36,16 @@ const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Buscar al usuario en la simulación de la base de datos
-    const user = UserModel.findUserByUsername(username);
+    // Buscar al usuario en la base de datos
+    const user = await UserModel.findOne({ username });
 
-    // Verificar las credenciales
-    if (!user || user.password !== password) {
+    // Verificar las credenciales utilizando bcrypt
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     // Generar un token JWT
-    const token = jwt.sign({ user: { id: user.id, username: user.username } }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ user: { id: user._id, username: user.username } }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token });
   } catch (error) {
