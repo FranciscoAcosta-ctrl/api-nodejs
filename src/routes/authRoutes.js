@@ -1,11 +1,10 @@
-// /src/routes/authRoutes.js
+// src/routes/authRoutes.js
 import express from 'express';
-import { registerUser, loginUser } from '../controllers/authController.js';
-import { authenticateToken } from '../middlewares/authMiddleware.js';
+import authController from '../controllers/authController.js';
 
 const router = express.Router();
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
+router.post('/register', authController.register);
+router.post('/login', authController.login);
 
 export default router;
