@@ -83,7 +83,7 @@ const register = async (req, res) => {
     const token = jwt.sign(
       { user: { id: newUser._id, username: newUser.username } },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
 
     res.json({ token });
@@ -109,7 +109,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { user: { id: user._id, username: user.username } },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
 
     res.json({ token });
@@ -120,7 +120,7 @@ const login = async (req, res) => {
 };
 
 // Endpoint para solicitar el envío del código de verificación por correo electrónico
-export const requestVerificationCode = async (req, res) => {
+const requestVerificationCode = async (req, res) => {
   console.log("POST: /request-verification-code");
 
   try {
@@ -168,7 +168,7 @@ export const requestVerificationCode = async (req, res) => {
 };
 
 // Endpoint para verificar el código de verificación
-export const verifyVerificationCode = async (req, res) => {
+const verifyVerificationCode = async (req, res) => {
   console.log("POST: /verify-verification-code");
 
   try {
@@ -185,12 +185,10 @@ export const verifyVerificationCode = async (req, res) => {
     // Verificar que el correo electrónico exista en algún usuario
     const correo = await UserModel.findOne({ email });
     if (!correo) {
-      return res
-        .status(404)
-        .json({
-          error:
-            "No se encontró ningún usuario con el correo electrónico proporcionado.",
-        });
+      return res.status(404).json({
+        error:
+          "No se encontró ningún usuario con el correo electrónico proporcionado.",
+      });
     }
 
     const user = await UserModel.findOne({
